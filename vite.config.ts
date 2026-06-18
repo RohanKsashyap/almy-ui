@@ -10,9 +10,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.png', 'robots.txt', 'logo.png'],
       manifest: {
-        name: 'Almy's',
-        short_name: 'Almy's',
-        description: 'Almy's - Fashion E-commerce',
+        name: 'Almy',
+        short_name: 'Almy',
+        description: 'Almy - Fashion E-commerce',
         theme_color: '#DC2626',
         background_color: '#ffffff',
         display: 'standalone',
