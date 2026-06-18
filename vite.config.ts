@@ -1,0 +1,80 @@
+﻿import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import { VitePWA } from 'vite-plugin-pwa';
+
+// https://vitejs.dev/config/
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['favicon.png', 'robots.txt', 'logo.png'],
+      manifest: {
+        name: 'Almy's',
+        short_name: 'Almy's',
+        description: 'Almy's - Fashion E-commerce',
+        theme_color: '#DC2626',
+        background_color: '#ffffff',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        icons: [
+          {
+            src: 'favicon.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: 'favicon.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: 'favicon.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // Increase limit to 15MB for large assets like logo-1.png
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      },
+      devOptions: {
+        enabled: true,
+        navigateFallbackAllowlist: [/^index.html$/]
+      }
+    })
+  ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': ['react', 'react-dom', 'react-router-dom', 'lucide-react'],
+          'ui': ['@tanstack/react-query', 'axios', 'zustand']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
+  },
+  optimizeDeps: {
+    exclude: ['lucide-react'],
+  },
+});

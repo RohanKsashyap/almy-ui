@@ -1,0 +1,398 @@
+﻿import { forwardRef, useState, useEffect, useMemo, useRef } from 'react';
+import { loadSite, type SiteSettings } from '../utils/storage';
+import { ChevronRight, ChevronLeft, Image as ImageIcon } from 'lucide-react';
+import { useProductContext } from '../context/ProductContext';
+import { getOptimizedUrl } from '../utils/imageKit';
+import { productService, type Category } from '../services/productService';
+
+type HeroSectionProps = object;
+
+const defaultSite: SiteSettings = {
+  hero: {
+    title: "ALMY'S",
+    subtitle: 'Beautiful Dresses for Girls 7-13',
+    slides: [],
+    bannerImage: '',
+    bannerTitle: 'Where Dreams\nCome True',
+    bannerSubtitle: 'Perfect Dresses for Growing Girls',
+    bannerCtaText: 'Discover Magic',
+    bannerCtaHref: '/shop',
+  },
+  editorial: {
+    image: '',
+    kicker: 'Growing Up in Style',
+    title: 'Every Girl\nDeserves Magic',
+    body: 'From first school dances to birthday parties, we create magical moments with dresses designed specifically for girls aged 7-13. Every dress tells a story of growing up beautifully.',
+    ctaText: 'Find Her Perfect Dress',
+    ctaHref: '/shop',
+  },
+  collections: [
+    { id: 1, title: 'Princess Collection', image: '', category: 'Ages 7-10' },
+    { id: 2, title: 'Birthday Party', image: '', category: 'Ages 8-12' },
+    { id: 3, title: 'School Dance', image: '', category: 'Ages 10-13' },
+  ],
+  footerGroups: [
+    { title: 'Shop by Age', links: [
+      { label: 'Ages 7-8', href: '/shop' },
+      { label: 'Ages 9-10', href: '/shop' },
+      { label: 'Ages 11-12', href: '/shop' },
+      { label: 'Ages 12-13', href: '/shop' },
+    ]},
+    { title: 'For Parents', links: [
+      { label: 'Size Guide', href: '/size-guide' },
+      { label: 'Care Instructions', href: '/care' },
+      { label: 'Gift Cards', href: '/gift-cards' },
+      { label: 'Our Story', href: '/our-story' },
+    ]},
+    { title: 'Customer Care', links: [
+      { label: 'Contact Us', href: '/contact' },
+      { label: 'Shipping', href: '/shipping' },
+      { label: 'Returns', href: '/returns' },
+      { label: 'FAQ', href: '/faq' },
+    ]},
+    { title: 'Follow Us', links: [] },
+  ],
+  social: [
+    { kind: 'instagram', href: '#' },
+    { kind: 'facebook', href: '#' },
+    { kind: 'youtube', href: '#' },
+  ],
+  newsletter: { heading: 'Join Our Magic Circle', subtext: 'Get exclusive access to new magical dress collections and special offers for growing girls' },
+  legalLabels: { privacy: 'Privacy Policy', terms: 'Terms of Service', cookies: 'Cookie Policy' },
+  infoPages: {}
+};
+
+const HeroSection = forwardRef<HTMLDivElement, HeroSectionProps>(
+  (_, ref) => {
+    const { products } = useProductContext();
+    const [site, setSite] = useState<SiteSettings>(() => loadSite(defaultSite));
+    const [realCategories, setRealCategories] = useState<Category[]>([]);
+    const carouselRef = useRef<HTMLDivElement>(null);
+    const [isCategoryPaused, setIsCategoryPaused] = useState(false);
+    const categoryTouchX = useRef<number | null>(null);
+
+    useEffect(() => {
+      const refresh = () => setSite(loadSite(defaultSite));
+      window.addEventListener('backend-hydrated', refresh);
+      
+      const fetchRealCats = async () => {
+        try {
+          const cats = await productService.getCategories();
+          setRealCategories(cats);
+        } catch (e) {
+          console.error('Error fetching categories:', e);
+        }
+      };
+      fetchRealCats();
+
+      return () => window.removeEventListener('backend-hydrated', refresh);
+    }, []);
+
+    // Auto-slider for categories carousel
+    useEffect(() => {
+      if (realCategories.length <= 4 || isCategoryPaused) return;
+      
+      const interval = setInterval(() => {
+        handleCategoryScroll('right');
+      }, 4000);
+
+      return () => clearInterval(interval);
+    }, [realCategories, isCategoryPaused]);
+
+    const handleCategoryScroll = (direction: 'left' | 'right') => {
+      if (carouselRef.current) {
+        const container = carouselRef.current;
+        const scrollAmount = container.clientWidth * 0.8;
+        if (direction === 'left') {
+          if (container.scrollLeft <= 0) {
+            container.scrollTo({ left: container.scrollWidth, behavior: 'smooth' });
+          } else {
+            container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+          }
+        } else {
+          if (container.scrollLeft + container.clientWidth >= container.scrollWidth - 10) {
+            container.scrollTo({ left: 0, behavior: 'smooth' });
+          } else {
+            container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+          }
+        }
+      }
+    };
+    
+    const categoryImages = useMemo(() => {
+      const getFirstImage = (cat: string) => {
+        const p = products.find(p => p.category?.toLowerCase() === cat.toLowerCase());
+        return p?.image || (p?.images && p.images[0]) || null;
+      };
+
+      const fallbackImages = (site.hero.slides || []).map(s => s.url);
+
+      return {
+        party: getFirstImage('jewelery') || getFirstImage('women\'s clothing') || fallbackImages[0],
+        casual: getFirstImage('men\'s clothing') || fallbackImages[1],
+        seasonal: getFirstImage('electronics') || fallbackImages[2],
+        special: getFirstImage('jewelery') || fallbackImages[0],
+      };
+    }, [products, site.hero.slides]);
+
+    const baseSlides = (site.hero.slides 
+      ? site.hero.slides 
+      : (site.hero.backgroundImages || []).map((url: string, i: number) => ({ id: `slide-${i}`, type: 'image' as const, url }))
+    ).filter((s: any) => s.isActive !== false);
+
+    const slides = baseSlides.filter((s: any) => !(s.type === 'video' && /w3schools\.com\/html\/mov_bbb\.mp4/i.test(s.url)));
+    
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [brokenIds, setBrokenIds] = useState<Set<string>>(new Set());
+    const [touchStart, setTouchStart] = useState<number | null>(null);
+    const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+    // Minimum swipe distance in pixels
+    const minSwipeDistance = 50;
+
+    const onTouchStart = (e: React.TouchEvent) => {
+      setTouchEnd(null);
+      setTouchStart(e.targetTouches[0].clientX);
+    };
+
+    const onTouchMove = (e: React.TouchEvent) => {
+      setTouchEnd(e.targetTouches[0].clientX);
+    };
+
+    const onTouchEnd = () => {
+      if (!touchStart || !touchEnd) return;
+      const distance = touchStart - touchEnd;
+      const isLeftSwipe = distance > minSwipeDistance;
+      const isRightSwipe = distance < -minSwipeDistance;
+      
+      if (isLeftSwipe) {
+        nextSlide();
+      } else if (isRightSwipe) {
+        prevSlide();
+      }
+    };
+
+    const effectiveSlides = slides.filter((s: any) => !brokenIds.has(s.id));
+
+    if (effectiveSlides.length === 0 && site.hero.bannerImage) {
+      effectiveSlides.push({ id: 'fallback', type: 'image', url: site.hero.bannerImage });
+    }
+
+    useEffect(() => {
+      if (effectiveSlides.length <= 1) return;
+      const interval = setInterval(() => {
+        setCurrentImageIndex((prev) => (prev + 1) % effectiveSlides.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }, [effectiveSlides.length]);
+
+    useEffect(() => {
+      if (currentImageIndex >= effectiveSlides.length) {
+        setCurrentImageIndex(0);
+      }
+    }, [effectiveSlides.length, currentImageIndex]);
+
+    const nextSlide = () => setCurrentImageIndex((prev) => (prev + 1) % (effectiveSlides.length || 1));
+    const prevSlide = () => setCurrentImageIndex((prev) => (prev - 1 + (effectiveSlides.length || 1)) % (effectiveSlides.length || 1));
+
+    if (site.hero.isActive === false) return null;
+
+    const currentSlide = effectiveSlides[currentImageIndex] || {};
+
+    return (
+      <div ref={ref} className="relative bg-white pt-0">
+        <section 
+          className="relative h-screen w-full overflow-hidden touch-pan-y"
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+        >
+          {/* Background Slider */}
+          {effectiveSlides.map((slide: any, index: number) => (
+            <div
+              key={slide.id || index}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+              }`}
+            >
+              {slide.type === 'video' ? (
+                <video
+                  src={slide.url}
+                  className="w-full h-full object-cover lg:object-contain bg-neutral-100"
+                  autoPlay={index === currentImageIndex}
+                  muted
+                  loop
+                  playsInline
+                  preload="none"
+                  onError={() => {
+                    setBrokenIds((prev) => {
+                      const n = new Set(prev);
+                      n.add(slide.id);
+                      return n;
+                    });
+                  }}
+                />
+              ) : (
+                <img
+                  src={getOptimizedUrl(slide.url, 1920)}
+                  alt={slide.title || `Hero slide ${index + 1}`}
+                  className="w-full h-full object-cover lg:object-contain bg-neutral-100"
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                  onError={() => {
+                    setBrokenIds((prev) => {
+                      const n = new Set(prev);
+                      n.add(slide.id);
+                      return n;
+                    });
+                  }}
+                />
+              )}
+              <div className="absolute inset-0 bg-black/10" /> {/* Subtle overlay */}
+            </div>
+          ))}
+
+          {/* Navigation Arrows */}
+          {effectiveSlides.length > 1 && (
+            <>
+              <button 
+                onClick={prevSlide}
+                className="absolute left-4 sm:left-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-black/10 backdrop-blur-sm text-white hover:bg-black/20 transition-all z-20 group"
+              >
+                <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8 transition-transform group-hover:-translate-x-1" />
+              </button>
+              <button 
+                onClick={nextSlide}
+                className="absolute right-4 sm:right-8 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-14 sm:h-14 flex items-center justify-center rounded-full bg-black/10 backdrop-blur-sm text-white hover:bg-black/20 transition-all z-20 group"
+              >
+                <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8 transition-transform group-hover:translate-x-1" />
+              </button>
+            </>
+          )}
+
+          {/* Content Overlay */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6 z-10 pointer-events-none">
+            <div className="animate-fadeIn w-full max-w-4xl pointer-events-auto">
+              <p className="text-white text-[10px] sm:text-xs md:text-sm tracking-[0.4em] uppercase mb-4 sm:mb-6 font-medium drop-shadow-md">
+                {currentSlide.subtitle || site.hero.subtitle}
+              </p>
+              <h1 className="font-headline text-4xl sm:text-6xl md:text-8xl text-white mb-8 sm:mb-12 tracking-wider drop-shadow-lg leading-tight uppercase">
+                {currentSlide.title || site.hero.title}
+              </h1>
+              <div className="flex flex-col gap-4 justify-center items-center w-full max-w-sm mx-auto">
+                <a 
+                  href={currentSlide.bannerCtaHref || "/shop"} 
+                  className="bg-white text-black px-12 py-4 text-[11px] sm:text-xs tracking-[0.2em] uppercase hover:bg-gray-100 transition-all duration-300 w-full"
+                >
+                  {currentSlide.bannerCtaText || "Shop Now"}
+                </a>
+                <a 
+                  href="/shop?newarrival=true" 
+                  className="border border-white text-white px-12 py-4 text-[11px] sm:text-xs tracking-[0.2em] uppercase hover:bg-white hover:text-black transition-all duration-300 w-full"
+                >
+                  New Arrivals
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Dots Indicators */}
+          {effectiveSlides.length > 1 && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+              {effectiveSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setCurrentImageIndex(idx)}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    idx === currentImageIndex ? 'bg-white' : 'bg-white/40 hover:bg-white/60'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+
+
+
+
+{/* Find the Perfect Dress for Every Moment section */}
+
+        <section className="py-12 md:py-20 px-6 lg:px-12 max-w-screen-2xl mx-auto overflow-hidden relative group/cat-section">
+          <h2 className="font-headline text-2xl md:text-3xl lg:text-4xl text-center text-gray-900 mb-10">Find the Perfect Dress for Every Moment</h2>
+          
+          <div className="relative">
+            {/* Navigation Buttons */}
+            <button 
+              onClick={() => handleCategoryScroll('left')}
+              className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-red-100 text-hot-pink opacity-0 group-hover/cat-section:opacity-100 transition-opacity hidden md:block"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button 
+              onClick={() => handleCategoryScroll('right')}
+              className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 z-10 bg-white/80 backdrop-blur-sm p-3 rounded-full shadow-lg border border-red-100 text-hot-pink opacity-0 group-hover/cat-section:opacity-100 transition-opacity hidden md:block"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            <div 
+              ref={carouselRef}
+              onMouseEnter={() => setIsCategoryPaused(true)}
+              onMouseLeave={() => setIsCategoryPaused(false)}
+              onTouchStart={(e) => {
+                setIsCategoryPaused(true);
+                categoryTouchX.current = e.touches[0].clientX;
+              }}
+              onTouchEnd={(e) => {
+                setIsCategoryPaused(false);
+                if (categoryTouchX.current !== null) {
+                  const dx = e.changedTouches[0].clientX - categoryTouchX.current;
+                  if (Math.abs(dx) > 40) {
+                    handleCategoryScroll(dx < 0 ? 'right' : 'left');
+                  }
+                  categoryTouchX.current = null;
+                }
+              }}
+              className="flex gap-4 md:gap-8 overflow-x-auto pb-6 custom-scrollbar snap-x snap-mandatory relative z-0"
+            >
+            {(realCategories.length > 0 ? realCategories : [
+              { _id: '1', title: 'Party Dresses', slug: 'party', imageUrl: categoryImages.party, name: 'Party Dresses' },
+              { _id: '2', title: 'Casual Dresses', slug: 'casual', imageUrl: categoryImages.casual, name: 'Casual Dresses' },
+              { _id: '3', title: 'Seasonal Dresses', slug: 'seasonal', imageUrl: categoryImages.seasonal, name: 'Seasonal Dresses' },
+              { _id: '4', title: 'Special Occasion', slug: 'special', imageUrl: categoryImages.special, name: 'Special Occasion' },
+            ]).map((c: any) => (
+              <a 
+                key={c._id || c.slug} 
+                href={`/shop?category=${c.slug}`} 
+                className="block group flex-shrink-0 w-[80%] sm:w-[45%] md:w-[23%] snap-start"
+              >
+                <div className="aspect-[3/4] overflow-hidden rounded-sm relative shadow-sm">
+                  {c.imageUrl ? (
+                    <img src={getOptimizedUrl(c.imageUrl, 400)} alt={c.name || c.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" loading="lazy" decoding="async" />
+                  ) : (
+                    <div className="w-full h-full bg-red-50 flex items-center justify-center text-red-200">
+                      <ImageIcon size={48} />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300" />
+                </div>
+                <div className="text-center mt-4">
+                  <p className="font-headline text-lg text-gray-900 group-hover:text-hot-pink transition-colors">{c.name || c.title}</p>
+                  <span className="text-xs text-gray-500 uppercase tracking-wider mt-1 block group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                    Shop Now <ChevronRight className="w-3 h-3" />
+                  </span>
+                </div>
+              </a>
+            ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  }
+);
+
+HeroSection.displayName = 'HeroSection';
+
+export default HeroSection;
