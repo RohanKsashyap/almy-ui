@@ -1,11 +1,12 @@
-﻿import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { ShoppingBag, Search, Menu, X, User } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { loadNav, isAuthenticated } from '../utils/storage';
+import { isAuthenticated } from '../utils/storage';
 import { products as defaultProducts } from '../data/products';
 import { loadProducts } from '../utils/storage';
 import { useCart } from '../context/CartContext';
 import { useProductContext } from '../context/ProductContext';
+import { siteService } from '../services/siteService';
 
 const defaultCategories = [
   { 
@@ -62,6 +63,7 @@ export default function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [navCategories, setNavCategories] = useState(defaultCategories);
   
   const { items } = useCart();
   const cartCount = useMemo(() => items.reduce((s, i) => s + i.qty, 0), [items]);
@@ -76,6 +78,15 @@ export default function Navigation() {
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Fetch nav categories from backend dynamically
+  useEffect(() => {
+    siteService.getNavCategories().then((cats) => {
+      if (cats && cats.length > 0) {
+        setNavCategories(cats);
+      }
+    });
   }, []);
 
   
@@ -126,7 +137,7 @@ export default function Navigation() {
             key={idx}
             className="mx-6 text-[10px] md:text-xs font-medium tracking-[0.25em] uppercase"
           >
-            🚚 Free Delivery On Orders Above ₹150
+            ?? Free Delivery On Orders Above ?150
           </span>
         ))}
       </div>
@@ -177,7 +188,7 @@ export default function Navigation() {
               
               {!shouldShowSolid && (
                 <div className="hidden lg:flex items-center space-x-8 xl:space-x-12 h-full">
-                  {loadNav(defaultCategories).map((category) => (
+                  {navCategories.map((category) => (
                     <div
                       key={category.name}
                       className="relative h-full flex items-center"
@@ -253,7 +264,7 @@ export default function Navigation() {
                             <img src={product.image} alt={product.name} className="w-12 h-12 object-cover rounded" />
                             <div className="ml-3 overflow-hidden">
                               <p className="text-sm font-medium text-gray-900 truncate">{product.name}</p>
-                              <p className="text-xs text-gray-500">${product.price}</p>
+                              <p className="text-xs text-gray-500">₹{product.price}</p>
                             </div>
                           </button>
                         ))}
@@ -307,7 +318,7 @@ export default function Navigation() {
             shouldShowSolid ? 'h-7 border-t border-gray-50 overflow-visible' : 'h-0 overflow-hidden'
           }`}>
             <div className="flex items-center space-x-8 xl:space-x-12 h-full">
-              {loadNav(defaultCategories).map((category) => (
+              {navCategories.map((category) => (
                 <div
                   key={category.name}
                   className="relative h-full flex items-center"
@@ -364,7 +375,7 @@ export default function Navigation() {
 
             <div className="flex-1 overflow-y-auto py-6 px-6 space-y-8" style={{ touchAction: 'pan-y' }}>
               <div className="space-y-6">
-                {loadNav(defaultCategories).map((category) => (
+                {navCategories.map((category) => (
                   <div key={category.name}>
                     <Link 
                       to={category.href || '#'} 

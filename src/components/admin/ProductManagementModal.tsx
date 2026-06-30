@@ -40,6 +40,7 @@ export default function ProductManagementModal({
     originalPrice: '',
     description: '',
     categoryId: '',
+    subCategorySlug: '',
     brand: '',
     size: '',
     sizes: [],
@@ -71,6 +72,7 @@ export default function ProductManagementModal({
   });
 
   const [categories, setCategories] = useState<any[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -78,6 +80,7 @@ export default function ProductManagementModal({
       setForm({
         ...initialProduct,
         categoryId: (initialProduct as any).categoryId?._id || (initialProduct as any).categoryId || '',
+        subCategorySlug: (initialProduct as any).subCategorySlug || '',
         sizes: Array.isArray((initialProduct as any).sizes) ? (initialProduct as any).sizes : [],
         colors: Array.isArray((initialProduct as any).colors) ? (initialProduct as any).colors : [],
         ageGroups: (initialProduct as any).ageGroups || [],
@@ -98,6 +101,7 @@ export default function ProductManagementModal({
         originalPrice: '',
         description: '',
         categoryId: '',
+        subCategorySlug: '',
         size: '',
         sizes: [],
         ageGroups: [],
@@ -128,6 +132,21 @@ export default function ProductManagementModal({
     };
     if (isOpen) fetchCats();
   }, [isOpen]);
+
+  // Update available subcategories when the selected category changes
+  useEffect(() => {
+    if (!form.categoryId) {
+      setSubCategories([]);
+      return;
+    }
+    const cat = categories.find((c) => c._id === form.categoryId);
+    const subs = (cat?.subCategories || []).filter((s: any) => s.isActive !== false);
+    setSubCategories(subs);
+    // If the current subCategorySlug is not in the new category's subs, clear it
+    if (form.subCategorySlug && !subs.find((s: any) => s.slug === form.subCategorySlug)) {
+      setForm((f: any) => ({ ...f, subCategorySlug: '' }));
+    }
+  }, [form.categoryId, categories]);
 
   // Automatically sync variants when colors or sizes change
   useEffect(() => {
@@ -365,6 +384,27 @@ export default function ProductManagementModal({
                   </div>
                 </div>
               </div>
+
+              {/* Subcategory selector — shown only when the selected category has subcategories */}
+              {subCategories.length > 0 && (
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-900">Subcategory</label>
+                  <div className="relative">
+                    <LayoutGrid className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <select
+                      className="w-full bg-gray-50 border-none rounded-xl pl-11 pr-10 py-3 text-sm focus:ring-2 focus:ring-red-200 outline-none appearance-none"
+                      value={form.subCategorySlug}
+                      onChange={(e) => setForm({ ...form, subCategorySlug: e.target.value })}
+                    >
+                      <option value="">No Subcategory</option>
+                      {subCategories.map((sub: any) => (
+                        <option key={sub._id || sub.slug} value={sub.slug}>{sub.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-900">Description</label>

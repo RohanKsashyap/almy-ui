@@ -52,11 +52,21 @@ export interface Category {
   description?: string;
   slug: string;
   isActive: boolean;
+  showInNav: boolean;
+  link?: string;
   displayOrder: number;
   imageUrl?: string;
   thumbnailUrl?: string;
   imageId?: string;
   productCount?: number;
+  subCategories?: Array<{
+    _id: string;
+    name: string;
+    slug: string;
+    link?: string;
+    displayOrder: number;
+    isActive: boolean;
+  }>;
   createdAt: string;
 }
 
@@ -355,6 +365,22 @@ export const adminService = {
 
   deleteCategory: async (id: string): Promise<void> => {
     await apiClient.delete(`/admin/categories/${id}`);
+  },
+
+  // Subcategories
+  addSubCategory: async (categoryId: string, data: { name: string; slug?: string; link?: string; displayOrder?: number; isActive?: boolean }): Promise<Category> => {
+    const response = await apiClient.post(`/admin/categories/${categoryId}/subcategories`, data);
+    return response.data;
+  },
+
+  updateSubCategory: async (categoryId: string, subId: string, data: Partial<{ name: string; slug: string; link: string; displayOrder: number; isActive: boolean }>): Promise<Category> => {
+    const response = await apiClient.put(`/admin/categories/${categoryId}/subcategories/${subId}`, data);
+    return response.data;
+  },
+
+  deleteSubCategory: async (categoryId: string, subId: string): Promise<Category> => {
+    const response = await apiClient.delete(`/admin/categories/${categoryId}/subcategories/${subId}`);
+    return response.data;
   },
 
   // Age Collections

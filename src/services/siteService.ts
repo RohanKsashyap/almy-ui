@@ -41,6 +41,16 @@ export const siteService = {
     }
   },
 
+  getNavCategories: async (): Promise<any[]> => {
+    if (!(await ensureBackendAvailable())) return [];
+    try {
+      const response = await apiClient.get('/categories/nav');
+      return response.data || [];
+    } catch {
+      return [];
+    }
+  },
+
   getSiteSettings: async (): Promise<any> => {
     if (!(await ensureBackendAvailable())) return null;
     try {

@@ -14,6 +14,8 @@ export default function Shop() {
   const [color, setColor] = useState<string>('All');
   const [type, setType] = useState<string>('All');
   const [size, setSize] = useState<string>('All');
+  const [categorySlug, setCategorySlug] = useState<string>('');
+  const [subCategorySlug, setSubCategorySlug] = useState<string>('');
   const [newArrivalOnly, setNewArrivalOnly] = useState(false);
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(100000);
@@ -70,6 +72,8 @@ export default function Shop() {
     setColor(colorParam || 'All');
     const naParam = sp.get('newarrival');
     setNewArrivalOnly(naParam === 'true');
+    setCategorySlug(sp.get('category') || '');
+    setSubCategorySlug(sp.get('sub') || '');
   }, [location.search]);
 
   useEffect(() => {
@@ -80,6 +84,8 @@ export default function Shop() {
     if (size !== 'All') filters.size = size;
     if (newArrivalOnly) filters.newarrival = true;
     if (q) filters.q = q;
+    if (categorySlug) filters.category = categorySlug;
+    if (subCategorySlug) filters.sub = subCategorySlug;
     filters.minPrice = minPrice;
     filters.maxPrice = maxPrice;
     setLoading(true);
@@ -91,13 +97,13 @@ export default function Shop() {
         setProducts(loadProducts(defaultProducts));
       })
       .finally(() => setLoading(false));
-  }, [age, color, type, size, newArrivalOnly, minPrice, maxPrice, q]);
+  }, [age, color, type, size, newArrivalOnly, minPrice, maxPrice, q, categorySlug, subCategorySlug]);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const priceVal = p.price;
       if (priceVal < minPrice || priceVal > maxPrice) return false;
-      
+
       if (size !== 'All') {
         const inSizes = (p.sizes ?? []).some((s: string) => s.toLowerCase() === size.toLowerCase());
         if (!inSizes) return false;
@@ -109,14 +115,25 @@ export default function Shop() {
       }
 
       if (color !== 'All' && (p.color ?? '').toLowerCase() !== color.toLowerCase()) return false;
-      
+
       if (newArrivalOnly && !p.newarrival) return false;
+
+      // Category slug filter (client-side guard — backend already filters, this handles cached fallback)
+      if (categorySlug) {
+        const catSlug = p.categoryId?.slug || '';
+        if (catSlug && catSlug !== categorySlug) return false;
+      }
+
+      // Subcategory slug filter
+      if (subCategorySlug) {
+        if ((p.subCategorySlug || '') !== subCategorySlug) return false;
+      }
 
       if (type !== 'All') {
         const catName = p.categoryId?.name || p.category || '';
         const pType = p.type || '';
         if (
-          catName.toLowerCase() !== type.toLowerCase() && 
+          catName.toLowerCase() !== type.toLowerCase() &&
           !pType.toLowerCase().includes(type.toLowerCase())
         ) return false;
       }
@@ -128,7 +145,7 @@ export default function Shop() {
       }
       return true;
     });
-  }, [age, color, type, size, newArrivalOnly, minPrice, maxPrice, q, products]);
+  }, [age, color, type, size, newArrivalOnly, minPrice, maxPrice, q, categorySlug, subCategorySlug, products]);
 
 
   return (
@@ -152,6 +169,42 @@ export default function Shop() {
             <p className="text-gray-500 max-w-xl text-sm md:text-base leading-relaxed">
               A curated selection of premium dresses for girls, designed for every magical moment and timeless style.
             </p>
+            {/* Active category/subcategory chips */}
+            {(categorySlug || subCategorySlug) && (
+              <div className="flex flex-wrap items-center gap-2 mt-4">
+                {categorySlug && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-hot-pink/10 text-hot-pink rounded-full text-xs font-semibold capitalize">
+                    {categorySlug.replace(/-/g, ' ')}
+                    <button
+                      onClick={() => {
+                        const sp = new URLSearchParams(location.search);
+                        sp.delete('category');
+                        sp.delete('sub');
+                        navigate({ search: sp.toString() }, { replace: true });
+                      }}
+                      className="hover:text-hot-pink/70"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                )}
+                {subCategorySlug && (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-semibold capitalize">
+                    {subCategorySlug.replace(/-/g, ' ')}
+                    <button
+                      onClick={() => {
+                        const sp = new URLSearchParams(location.search);
+                        sp.delete('sub');
+                        navigate({ search: sp.toString() }, { replace: true });
+                      }}
+                      className="hover:text-gray-400"
+                    >
+                      <X size={12} />
+                    </button>
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -366,6 +419,7 @@ export default function Shop() {
                 <button 
                   onClick={() => {
                     setAge('All'); setColor('All'); setType('All'); setSize('All'); setMinPrice(0); setMaxPrice(100000); setQ('');
+                    setCategorySlug(''); setSubCategorySlug('');
                     navigate('/shop');
                     setIsFilterDrawerOpen(false);
                   }}

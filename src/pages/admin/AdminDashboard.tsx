@@ -241,6 +241,40 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAddSubCategory = async (categoryId: string, data: any) => {
+    try {
+      const updated = await adminService.addSubCategory(categoryId, data);
+      // Refresh category data to reflect new subcategory
+      queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
+      setCategoryEditing(updated);
+      showToast('Subcategory added');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Error adding subcategory', 'error');
+    }
+  };
+
+  const handleUpdateSubCategory = async (categoryId: string, subId: string, data: any) => {
+    try {
+      const updated = await adminService.updateSubCategory(categoryId, subId, data);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
+      setCategoryEditing(updated);
+      showToast('Subcategory updated');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Error updating subcategory', 'error');
+    }
+  };
+
+  const handleDeleteSubCategory = async (categoryId: string, subId: string) => {
+    try {
+      const updated = await adminService.deleteSubCategory(categoryId, subId);
+      queryClient.invalidateQueries({ queryKey: ['admin', 'categories'] });
+      setCategoryEditing(updated);
+      showToast('Subcategory deleted');
+    } catch (err: any) {
+      showToast(err.response?.data?.message || 'Error deleting subcategory', 'error');
+    }
+  };
+
   const removeProduct = async (id: string) => {
     const product = catalog.find(p => p._id === id);
     if (!window.confirm(`Are you sure you want to delete "${product?.name || 'this product'}"?`)) return;
@@ -1577,6 +1611,9 @@ export default function AdminDashboard() {
           onClose={() => setIsCategoryModalOpen(false)}
           onSave={saveCategory}
           initialCategory={categoryEditing}
+          onAddSubCategory={handleAddSubCategory}
+          onUpdateSubCategory={handleUpdateSubCategory}
+          onDeleteSubCategory={handleDeleteSubCategory}
         />
       )}
 
