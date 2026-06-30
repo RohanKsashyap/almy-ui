@@ -55,7 +55,7 @@ export default function BudgetManager({ initial, onSave }: BudgetManagerProps) {
                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Label</label>
                     <input 
                       className="w-full text-sm font-semibold text-[#374151] border-none p-0 focus:ring-0" 
-                      placeholder="Under $20 AUD" 
+                      placeholder="Under ₹20" 
                       value={b.label} 
                       onChange={(e) => updateBudget(idx, 'label', e.target.value)} 
                     />
@@ -70,7 +70,7 @@ export default function BudgetManager({ initial, onSave }: BudgetManagerProps) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Min (AUD)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Min (INR)</label>
                     <input 
                       type="number"
                       className="w-full text-sm font-semibold text-[#374151] border-none p-0 focus:ring-0" 
@@ -79,7 +79,7 @@ export default function BudgetManager({ initial, onSave }: BudgetManagerProps) {
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Max (AUD)</label>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-[#9CA3AF]">Max (INR)</label>
                     <input 
                       type="number"
                       className="w-full text-sm font-semibold text-[#374151] border-none p-0 focus:ring-0" 

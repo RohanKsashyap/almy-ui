@@ -326,7 +326,7 @@ export default function OrdersManagement({ orders, onUpdateStatus, onDeleteOrder
             <p className="text-[11px] font-bold uppercase tracking-widest text-gray-400">Avg. Order Value</p>
             <div className="flex items-baseline gap-2 mt-2">
               <p className="text-3xl font-bold text-gray-900">
-                ${dashboardData?.counts?.sales && dashboardData?.counts?.orders
+                ₹{dashboardData?.counts?.sales && dashboardData?.counts?.orders
                   ? (Number(dashboardData.counts.sales) / dashboardData.counts.orders).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
                   : (orders.reduce((acc, o) => acc + (o.totalAmount || o.total || 0), 0) / (orders.length || 1)).toFixed(2)}
               </p>

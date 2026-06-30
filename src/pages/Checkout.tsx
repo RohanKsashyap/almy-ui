@@ -668,8 +668,6 @@ export default function Checkout() {
         </div>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-xs text-gray-500">AUD</span>
-
           <span className="text-xl font-bold">
             {formatAUD(grandTotal)}
           </span>

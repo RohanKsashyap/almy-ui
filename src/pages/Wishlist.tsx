@@ -138,7 +138,7 @@ const Wishlist = () => {
                         {product.name}
                       </h3>
                       <p className="font-bold text-gray-900">
-                        ${product.price.toFixed(2)}
+                        ₹{product.price.toFixed(2)}
                       </p>
                     </div>
                     <p className="text-xs text-gray-400 font-medium mb-4 line-clamp-1">
@@ -204,7 +204,7 @@ const Wishlist = () => {
                     {product.name}
                   </h3>
                   <p className="text-sm font-bold text-gray-400">
-                    ${product.price.toFixed(2)}
+                    ₹{product.price.toFixed(2)}
                   </p>
                 </div>
               ))}

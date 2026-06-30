@@ -184,15 +184,16 @@ export async function deleteSubscriber(id: string) { return adminService.deleteS
 export async function deleteContactMessage(id: string) { return adminService.deleteMessage(id); }
 
 // Keep helpers
-export function formatAUD(val: number): string {
-  return `$${Number(val).toLocaleString(undefined, {
+export function formatINR(val: number): string {
+  return `₹${Number(val).toLocaleString('en-IN', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 2
-  })} AUD`;
+  })}`;
 }
 
-// Redirect USD to AUD
-export const formatUSD = formatAUD;
+// Legacy aliases — all point to INR formatter
+export const formatAUD = formatINR;
+export const formatUSD = formatINR;
 export const toUSD = (val: number) => val;
 export const toAUD = (val: number) => val;
 

@@ -126,7 +126,7 @@ export default function Navigation() {
             key={idx}
             className="mx-6 text-[10px] md:text-xs font-medium tracking-[0.25em] uppercase"
           >
-            🚚 Free Delivery On Orders Above $150 AUD
+            🚚 Free Delivery On Orders Above ₹150
           </span>
         ))}
       </div>

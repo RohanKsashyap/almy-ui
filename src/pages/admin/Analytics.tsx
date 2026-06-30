@@ -171,7 +171,7 @@ const TopSellingProducts = ({ products = [] }: { products?: any[] }) => {
               </div>
             </div>
             <div className="text-right">
-              <p className="text-lg font-black text-gray-900">${p.price}</p>
+              <p className="text-lg font-black text-gray-900">₹{p.price}</p>
               <div className="flex items-center gap-1 justify-end mt-1.5 text-emerald-500">
                 <TrendingUp size={12} />
                 <p className="text-[10px] font-black uppercase tracking-widest">{p.sold || 0} Units</p>

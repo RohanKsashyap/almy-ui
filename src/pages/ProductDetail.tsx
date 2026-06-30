@@ -201,7 +201,7 @@ export default function ProductDetail() {
             "offers": {
               "@type": "Offer",
               "url": `https://www.Almy's.com.au/product/${product.slug || product.id}`,
-              "priceCurrency": "AUD",
+              "priceCurrency": "INR",
               "price": displayPrice,
               "availability": isOutOfStock || isSelectedSizeOutOfStock ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
               "itemCondition": "https://schema.org/NewCondition"

@@ -775,7 +775,7 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <p className="text-[11px] font-bold text-gray-900 line-clamp-1">{p.name}</p>
-                            <p className="text-[9px] font-bold text-[#DC2626]">${p.price}</p>
+                            <p className="text-[9px] font-bold text-[#DC2626]">₹{p.price}</p>
                           </div>
                         </button>
                       ))}
@@ -809,7 +809,7 @@ export default function AdminDashboard() {
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {[
-                    { label: 'Total Revenue', value: `$${Number(dashboardData.counts?.sales || 0).toLocaleString()}`, change: '+12.5%', icon: DollarSign, color: 'text-emerald-500 bg-emerald-50' },
+                    { label: 'Total Revenue', value: `₹${Number(dashboardData.counts?.sales || 0).toLocaleString('en-IN')}`, change: '+12.5%', icon: DollarSign, color: 'text-emerald-500 bg-emerald-50' },
                     { label: 'Total Orders', value: dashboardData.counts?.orders || 0, change: '+8.2%', icon: ShoppingBag, color: 'text-blue-500 bg-blue-50' },
                     { label: 'Total Customers', value: dashboardData.counts?.users || 0, change: '+15.3%', icon: Users, color: 'text-purple-500 bg-purple-50' },
                     { label: 'Total Products', value: dashboardData.counts?.products || 0, change: 'Active', icon: LayoutGrid, color: 'text-red-500 bg-red-50' }
@@ -862,7 +862,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-sm font-black text-gray-900">${order.totalAmount}</p>
+                              <p className="text-sm font-black text-gray-900">₹{order.totalAmount}</p>
                               <p className="text-[9px] font-black text-emerald-500 uppercase tracking-widest mt-1">{order.status}</p>
                             </div>
                           </div>
@@ -994,7 +994,7 @@ export default function AdminDashboard() {
                                   <div>
                                     <p className="text-sm font-black text-gray-900 line-clamp-1 group-hover/item:text-[#DC2626] transition-colors">{p.name}</p>
                                     <div className="flex items-center gap-2 mt-1">
-                                      <span className="text-[11px] font-black text-[#DC2626]">${p.price}</span>
+                                      <span className="text-[11px] font-black text-[#DC2626]">₹{p.price}</span>
                                       <span className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">in {p.categoryId?.name || 'Uncategorized'}</span>
                                     </div>
                                   </div>
@@ -1085,7 +1085,7 @@ export default function AdminDashboard() {
                                 </div>
                               </div>
                             </td>
-                            <td className="px-8 py-5 font-black text-sm text-gray-900">${product.price}</td>
+                            <td className="px-8 py-5 font-black text-sm text-gray-900">₹{product.price}</td>
                             <td className="px-8 py-5">
                               <span className="px-4 py-1.5 bg-gray-50 text-gray-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-gray-100">
                                 {product.categoryId?.name || 'Uncategorized'}

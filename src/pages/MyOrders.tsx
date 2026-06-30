@@ -213,7 +213,7 @@ const MyOrders = () => {
                       </div>
                     </div>
                     <div className="text-left sm:text-right border-t sm:border-none pt-4 sm:pt-0">
-                      <p className="text-lg font-bold text-gray-900">${(item.price * item.quantity).toFixed(2)}</p>
+                      <p className="text-lg font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</p>
                     </div>
                   </div>
                 ))}

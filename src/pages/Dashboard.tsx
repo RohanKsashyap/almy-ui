@@ -52,7 +52,7 @@ const Dashboard = () => {
   const primaryAddress = user.addresses?.find((a: any) => a.isPrimary) || user.addresses?.[0];
 
   const stats = [
-    { label: 'TOTAL SPENT', value: `$${totalSpent.toFixed(2)}` },
+    { label: 'TOTAL SPENT', value: `₹${totalSpent.toFixed(2)}` },
     { label: 'ORDERS COMPLETED', value: orders.length.toString() },
     { label: 'ITEMS IN WISHLIST', value: wishlistIds.length.toString() },
     { label: 'LOYALTY POINTS', value: Math.floor(totalSpent / 10).toString() },
@@ -189,7 +189,7 @@ const Dashboard = () => {
                   {product.name}
                 </h3>
                 <p className="text-sm font-medium text-gray-500">
-                  ${product.price.toFixed(2)}
+                  ₹{product.price.toFixed(2)}
                 </p>
               </div>
             ))}

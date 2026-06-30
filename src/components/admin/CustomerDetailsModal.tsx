@@ -104,7 +104,7 @@ export default function CustomerDetailsModal({ isOpen, onClose, customer, onView
                   </div>
                   <div className="bg-white p-4 rounded-2xl border border-gray-50 shadow-sm">
                     <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-1">Total Spent</p>
-                    <p className="text-xl font-black text-red-600">${totalSpent.toLocaleString()}</p>
+                    <p className="text-xl font-black text-red-600">₹{totalSpent.toLocaleString('en-IN')}</p>
                   </div>
                 </div>
               </div>
@@ -210,7 +210,7 @@ export default function CustomerDetailsModal({ isOpen, onClose, customer, onView
                         <div className="flex sm:flex-col justify-between items-end gap-2">
                           <div className="text-right">
                             <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mb-0.5">Order Total</p>
-                            <p className="text-xl font-black text-gray-900 tracking-tighter">${(order.totalAmount || 0).toLocaleString()}</p>
+                            <p className="text-xl font-black text-gray-900 tracking-tighter">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</p>
                           </div>
                           <button 
                             onClick={() => onViewOrder(order)}
